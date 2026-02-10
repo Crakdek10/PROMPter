@@ -5,7 +5,7 @@ from app.api import health, stt_ws
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.api.providers import router as providers_router
-
+from app.api.llm import router as llm_router
 
 def create_app() -> FastAPI:
     settings = get_settings()
@@ -25,7 +25,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(stt_ws.router)
     app.include_router(providers_router)
-    
+    app.include_router(llm_router)
+
     return app
 
 app = create_app()

@@ -3,6 +3,8 @@ from fastapi import APIRouter
 from app.providers.stt.cloud_stub import CloudStubSTTProvider
 from app.providers.stt.custom_ws_proxy import CustomWSProxySTTProvider
 from app.providers.stt.whisper_selfhosted import WhisperSelfHostedSTTProvider
+from app.providers.llm.openai_compat import OpenAICompatLLMProvider
+from app.providers.llm.gemini import GeminiLLMProvider
 
 router = APIRouter(prefix="/providers", tags=["providers"])
 
@@ -34,4 +36,18 @@ def list_stt_providers() -> dict:
 
 @router.get("/llm")
 def list_llm_providers() -> dict:
-    return {"items": []}
+    items = [
+        {
+            "name": OpenAICompatLLMProvider.name,
+            "type": "llm",
+            "status": "ready",
+            "description": "API OpenAI-compatible (chat/completions).",
+        },
+        {
+            "name": GeminiLLMProvider.name,
+            "type": "llm",
+            "status": "skeleton",
+            "description": "Gemini (pendiente implementar).",
+        },
+    ]
+    return {"items": items}
