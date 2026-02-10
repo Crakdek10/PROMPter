@@ -1,7 +1,7 @@
 from __future__ import annotations
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Any, Optional
 import json
+from typing import Any, Optional
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.session_store import SessionStore
 from app.services.stt_router import STTRouter
 
@@ -33,7 +33,11 @@ async def ws_stt(websocket: WebSocket) -> None:
                 await send({"type": "error", "message": "Invalid message (must be object)"})
                 continue
 
-            new_session_id, out_messages, should_close = _stt_router.handle(msg, session_id)
+            try:
+                new_session_id, out_messages, should_close = await _stt_router.handle(msg, session_id)
+            except Exception as e:
+                await send({"type": "error", "message": str(e), "session_id": session_id or ""})
+                continue
 
             session_id = new_session_id if new_session_id is not None else session_id
 
