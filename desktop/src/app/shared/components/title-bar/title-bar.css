@@ -1,0 +1,7 @@
+:host {
+  display: block;
+  -webkit-app-region: drag; /* Permite arrastrar */
+}
+button, .no-drag {
+  -webkit-app-region: no-drag; /* Bloquea arrastre en botones */
+}

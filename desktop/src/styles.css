@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* --- PALETA POR DEFECTO (Dark/Coffee Theme) --- */
+
+  /* 1. FONDOS */
+  --bg-app: #1a0f0f;           /* El fondo casi negro/café profundo de tu captura */
+  --bg-surface: #2c1a1a;       /* El fondo de los paneles laterales */
+  --bg-surface-hover: #3d2424; /* Un poco más claro para hovers */
+
+  /* 2. MARCA / ACCIÓN */
+  --primary: #8caeab;          /* Ese tono verde azulado (Jet Black/Dusty) de tus temas */
+  --primary-fg: #000000;       /* Texto negro sobre el botón primario */
+
+  --secondary: #4a3b3b;        /* Botones secundarios (como "Añadir atajo") */
+  --accent: #e09f7d;           /* Color de destaque (naranja/durazno) */
+
+  /* 3. TEXTO */
+  --text-main: #fdf8e8;        /* Blanco hueso para lectura */
+  --text-muted: #a89090;       /* Texto gris/café para descripciones */
+  --text-inverse: #000000;     /* Texto sobre fondos claros */
+
+  /* 4. ESTRUCTURA */
+  --border-default: #4a3b3b;   /* Líneas separadoras sutiles */
+  --border-active: #8caeab;    /* Borde al hacer foco */
+
+  /* 5. ESTADOS */
+  --color-error: #ef4444;      /* Rojo para errores */
+  --color-success: #22c55e;    /* Verde para "Válida" */
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background-color: var(--bg-app); /* Asegura que el fondo base sea el correcto */
+  color: var(--text-main);         /* Asegura el color de texto base */
+}
