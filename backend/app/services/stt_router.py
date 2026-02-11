@@ -2,11 +2,17 @@ from __future__ import annotations
 from typing import Any, Optional
 from app.services.session_store import SessionStore
 from app.utils.ws_protocol import b64_to_bytes
+from app.utils.validate import (
+    DEFAULT_AUDIO_CONSTRAINTS,
+    validate_audio_bytes_size,
+    validate_b64_string,
+    validate_format,
+    validate_sample_rate,
+)
 from app.providers.stt.base import STTAudioFrame, STTProvider
 from app.providers.stt.cloud_stub import CloudStubSTTProvider
 from app.providers.stt.custom_ws_proxy import CustomWSProxySTTProvider
 from app.providers.stt.whisper_selfhosted import WhisperSelfHostedSTTProvider
-
 
 class STTRouter:
     def __init__(self, store: SessionStore) -> None:
@@ -17,6 +23,8 @@ class STTRouter:
             CustomWSProxySTTProvider.name: CustomWSProxySTTProvider(),
             WhisperSelfHostedSTTProvider.name: WhisperSelfHostedSTTProvider(),
         }
+
+        self._audio_constraints = DEFAULT_AUDIO_CONSTRAINTS
 
     def _pick_provider(self, config: dict[str, Any]) -> STTProvider:
         name = config.get("provider", "cloud_stub")
@@ -79,19 +87,20 @@ class STTRouter:
         if not sess:
             return None, [{"type": "error", "message": "Send 'start' first"}], False
 
-        fmt = msg.get("format")
-        sr = msg.get("sample_rate")
-        data = msg.get("data")
-
-        if fmt != "pcm16":
-            return current_session_id, [{"type": "error", "message": "Only format=pcm16 supported", "session_id": current_session_id}], False
-        if not isinstance(sr, int) or sr <= 0:
-            return current_session_id, [{"type": "error", "message": "Invalid sample_rate", "session_id": current_session_id}], False
-        if not isinstance(data, str) or not data:
-            return current_session_id, [{"type": "error", "message": "Missing audio data", "session_id": current_session_id}], False
+        try:
+            fmt = validate_format(msg.get("format"), self._audio_constraints)
+            sr = validate_sample_rate(msg.get("sample_rate"), self._audio_constraints)
+            data = validate_b64_string(msg.get("data"))
+        except ValueError as e:
+            return current_session_id, [{"type": "error", "message": str(e), "session_id": current_session_id}], False
 
         try:
             audio_bytes = b64_to_bytes(data)
+        except ValueError as e:
+            return current_session_id, [{"type": "error", "message": str(e), "session_id": current_session_id}], False
+
+        try:
+            validate_audio_bytes_size(audio_bytes, self._audio_constraints)
         except ValueError as e:
             return current_session_id, [{"type": "error", "message": str(e), "session_id": current_session_id}], False
 
