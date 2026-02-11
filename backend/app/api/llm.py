@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from app.services.llm_router import LLMRouter
 from app.providers.llm.base import LLMGenerateRequest, LLMMessage
+from app.core.errors import ProviderError, ConfigError
 
 router = APIRouter(prefix="/llm", tags=["llm"])
 
@@ -40,7 +41,12 @@ async def generate_llm(payload: LLMGenerateIn) -> LLMGenerateOut:
     try:
         res = await _llm_router.generate(req, payload.config)
         return LLMGenerateOut(text=res.text, provider=res.provider, model=res.model, usage=res.usage)
+
     except NotImplementedError:
-        return LLMGenerateOut(text="", provider=payload.provider or "unknown", model=None, usage={"error": "Provider not implemented yet"})
+        raise ProviderError("Provider not implemented yet", provider=payload.provider or "")
+
+    except ValueError as e:
+        raise ConfigError(str(e))
+
     except Exception as e:
-        return LLMGenerateOut(text="", provider=payload.provider or "unknown", model=None, usage={"error": str(e)})
+        raise ProviderError(str(e), provider=payload.provider or "")
