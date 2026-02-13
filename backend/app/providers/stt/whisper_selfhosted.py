@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 import os
+import shutil
 import tempfile
 import subprocess
 from typing import Any, Optional
+
 from app.core.config import get_settings
 from app.providers.stt.base import STTAudioFrame, STTProvider
 from app.services.session_store import SessionStore
@@ -16,18 +19,59 @@ class WhisperSelfHostedSTTProvider(STTProvider):
         self.store = store
         self.settings = get_settings()
 
+    def _normalize_bin_path(self, p: str) -> str:
+        p = p.strip()
+
+        # Si te pasan un nombre (no ruta), intenta resolver por PATH
+        if "/" not in p and "\\" not in p:
+            resolved = shutil.which(p)
+            if resolved:
+                return resolved
+            return p
+
+        # Si te pasaron .../main (viejo), intenta cambiar a whisper-cli (nuevo)
+        base = os.path.basename(p)
+        if base == "main":
+            candidate = os.path.join(os.path.dirname(p), "whisper-cli")
+            if os.path.exists(candidate):
+                return candidate
+
+        # Si te pasaron una ruta, úsala tal cual
+        return p
+
     def _pick_bin(self, config: dict[str, Any]) -> str:
+        # 1) config override
         b = config.get("whisper_bin")
         if isinstance(b, str) and b.strip():
-            return b.strip()
-        if self.settings.WHISPER_CPP_BIN:
-            return self.settings.WHISPER_CPP_BIN
-        raise ValueError("WHISPER_CPP_BIN not configured (env or config.whisper_bin)")
+            path = self._normalize_bin_path(b)
+            if os.path.exists(path) or shutil.which(path):
+                return path
+            raise ValueError(f"WHISPER_CPP_BIN not found: {path}")
+
+        # 2) env
+        env_bin = self.settings.WHISPER_CPP_BIN
+        if isinstance(env_bin, str) and env_bin.strip():
+            path = self._normalize_bin_path(env_bin)
+            if os.path.exists(path) or shutil.which(path):
+                return path
+            raise ValueError(f"WHISPER_CPP_BIN not found: {path}")
+
+        # 3) fallback: buscar whisper-cli en PATH
+        which_cli = shutil.which("whisper-cli")
+        if which_cli:
+            return which_cli
+
+        # 4) fallback: buscar main en PATH (viejo)
+        which_main = shutil.which("main")
+        if which_main:
+            return which_main
+
+        raise ValueError("WHISPER_CPP_BIN not configured or not found (set env WHISPER_CPP_BIN)")
 
     def _pick_model(self, config: dict[str, Any]) -> str:
         m = config.get("model")
         if isinstance(m, str) and m.strip():
-            if "/" not in m:
+            if "/" not in m and "\\" not in m:
                 return os.path.join("/home/ubuntu/whisper.cpp/models", m.strip())
             return m.strip()
 
@@ -37,11 +81,14 @@ class WhisperSelfHostedSTTProvider(STTProvider):
         raise ValueError("WHISPER_CPP_MODEL not configured (env or config.model)")
 
     def _pick_lang(self, config: dict[str, Any]) -> Optional[str]:
-        lang = config.get("lang")
+        # acepta "lang" o "language" desde desktop
+        lang = config.get("lang") or config.get("language")
         if isinstance(lang, str) and lang.strip():
             return lang.strip()
+
         if self.settings.WHISPER_CPP_LANG and self.settings.WHISPER_CPP_LANG.strip():
             return self.settings.WHISPER_CPP_LANG.strip()
+
         return None
 
     async def on_start(self, session_id: str, config: dict[str, Any]) -> list[dict[str, Any]]:
@@ -70,7 +117,6 @@ class WhisperSelfHostedSTTProvider(STTProvider):
             return [{"type": "final", "session_id": session_id, "text": ""}]
 
         sample_rate = int(config.get("sample_rate") or 16000)
-
         wav_bytes = pcm16_to_wav_bytes(pcm, sample_rate=sample_rate, channels=1)
 
         whisper_bin = self._pick_bin(config)
@@ -79,13 +125,12 @@ class WhisperSelfHostedSTTProvider(STTProvider):
 
         with tempfile.TemporaryDirectory(prefix="prompter_whisper_") as td:
             wav_path = os.path.join(td, "audio.wav")
-            out_path = os.path.join(td, "out.txt")
-
             with open(wav_path, "wb") as f:
                 f.write(wav_bytes)
 
             out_prefix = os.path.join(td, "out")
 
+            # ✅ whisper-cli (nuevo) sigue aceptando -m -f -otxt -of
             cmd = [
                 whisper_bin,
                 "-m", whisper_model,
