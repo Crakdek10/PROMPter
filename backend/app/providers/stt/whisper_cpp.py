@@ -29,12 +29,6 @@ def _write_wav_pcm16_mono(path: str, pcm16: bytes, sample_rate: int) -> None:
 
 
 class WhisperCppSTTProvider(STTProvider):
-    """
-    MVP:
-    - acumula audio pcm16 por sesión (SessionStore)
-    - en stop genera wav temporal
-    - ejecuta whisper.cpp (main) y devuelve "final"
-    """
     name = "whisper_cpp"
 
     def __init__(self, store: SessionStore) -> None:

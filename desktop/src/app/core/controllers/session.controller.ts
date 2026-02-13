@@ -48,16 +48,11 @@ export class SessionController {
       provider: s.selectedSttProviderId,
       sample_rate: s.stt.sampleRate,
       format: s.stt.format,
-      language: s.stt.language ?? "en", // si no tienes language, quita esta línea
+      language: s.stt.language ?? "en",
     };
-
-    // ✅ NO mandar whisper_bin/model desde frontend.
-    // Eso se resuelve con .env en la MV (backend).
 
     this.sttWs.start(this.sessionId, sttConfig);
 
-    // IMPORTANTE: NO empezar audio aquí
-    // esperamos "ready" del servidor en onSttMsg()
   }
 
   stop() {

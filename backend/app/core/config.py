@@ -7,18 +7,17 @@ class Settings(BaseSettings):
     APP_NAME: str = "PROMPTer-backend"
     ENV: str = "dev"
     LOG_LEVEL: str = "INFO"
-
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    CORS_ORIGINS: List[str] = ["http://localhost:4200", "null"]
+    CORS_ORIGINS: list[str] = ["*"]
 
-    WHISPER_CPP_BIN: Optional[str] = None
-    WHISPER_CPP_MODEL: Optional[str] = None
-    WHISPER_CPP_LANG: Optional[str] = None
+    WHISPER_CPP_BIN: str | None = None
+    WHISPER_CPP_MODEL: str | None = None
+    WHISPER_CPP_LANG: str | None = None
 
     model_config = SettingsConfigDict(
-        env_file="backend/.env",
+        env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
