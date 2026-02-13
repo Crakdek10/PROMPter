@@ -1,0 +1,28 @@
+<div
+  class="rounded-xl bg-background border border-border p-3"
+  [class.opacity-60]="disabled"
+>
+  <button
+    type="button"
+    class="w-full flex items-center justify-between"
+    (click)="onToggle()"
+    [disabled]="disabled"
+  >
+    <div class="font-medium">{{ title }}</div>
+
+    <div class="text-text-muted transition-transform duration-300"
+         [class.rotate-180]="open">
+      ▾
+    </div>
+  </button>
+
+  <div
+    class="grid transition-[grid-template-rows,opacity] duration-400 ease-in-out"
+    [style.grid-template-rows]="open ? '1fr' : '0fr'"
+    [style.opacity]="open ? 1 : 0"
+  >
+    <div class="overflow-hidden">
+      <ng-content />
+    </div>
+  </div>
+</div>

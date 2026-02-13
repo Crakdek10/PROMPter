@@ -46,8 +46,8 @@ def list_llm_providers() -> dict:
         {
             "name": GeminiLLMProvider.name,
             "type": "llm",
-            "status": "skeleton",
-            "description": "Gemini (pendiente implementar).",
+            "status": "ready",
+            "description": "Gemini via Generative Language API.",
         },
     ]
     return {"items": items}

@@ -1,0 +1,254 @@
+<div class="max-w-3xl">
+
+  <!-- (Opcional) Runtime: puedes ocultarlo luego, pero ahora es útil -->
+  <div class="mb-6">
+    <div class="text-xs text-text-muted mb-2">Runtime</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div>
+        <div class="text-xs text-text-muted mb-1">API Base URL</div>
+        <input
+          class="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm
+                 outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)] transition"
+          [value]="apiBaseUrl()"
+          (input)="onApiBaseUrlInput($any($event.target).value)"
+          placeholder="http://<backend-host>:8000"
+        />
+      </div>
+
+      <div>
+        <div class="text-xs text-text-muted mb-1">WS Base URL</div>
+        <input
+          class="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm
+                 outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)] transition"
+          [value]="wsBaseUrl()"
+          (input)="onWsBaseUrlInput($any($event.target).value)"
+          placeholder="ws://<backend-host>:8000"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- IA -->
+  <div class="mb-10">
+    <div class="text-lg font-semibold mb-4">IA</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- Proveedor -->
+      <div>
+        <div class="text-xs text-text-muted mb-2">Proveedor</div>
+        <div class="relative">
+          <select
+            class="w-full appearance-none rounded-lg bg-surface border border-border px-3 py-2 pr-10 text-sm
+                   outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)] transition"
+            [value]="selectedLlmProviderId()"
+            (change)="onPickLlmProvider($any($event.target).value)"
+          >
+            @for (p of llmProviders(); track p.name) {
+              <option [value]="p.name">{{ p.name }}</option>
+            }
+          </select>
+
+          @if (lastError()) {
+            <div class="mt-2 text-xs text-color-error">
+              {{ lastError() }}
+            </div>
+          }
+
+          <svg
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- API Key -->
+      <div>
+        <div class="text-xs text-text-muted mb-2">API Key</div>
+        <input
+          type="password"
+          class="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm
+                 outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)] transition"
+          placeholder="••••••••••"
+          (input)="onLlmApiKeyInput($any($event.target).value)"
+        />
+
+        @if (llmKeyMasked()) {
+          <div class="mt-1 text-xs text-text-muted">Guardada: {{ llmKeyMasked() }}</div>
+        }
+      </div>
+    </div>
+
+    <div>
+      <div class="text-xs text-text-muted mb-2">Modelo</div>
+      <input
+        class="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm
+           outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)] transition"
+        [value]="llmModelValue()"
+        (input)="onLlmModelInput($any($event.target).value)"
+        placeholder="gemini-2.5-flash"
+      />
+    </div>
+
+    <!-- Probar -->
+    <div class="mt-4 flex items-center gap-3">
+      <button
+        type="button"
+        class="h-9 px-3 rounded-lg bg-surface border border-border hover:bg-surface-hover transition
+               flex items-center gap-2 text-sm"
+        (click)="testLlm()"
+        [disabled]="llmStatus() === 'checking'"
+      >
+        <span>Probar conexión</span>
+
+        <span
+          class="h-9 w-9 grid place-items-center rounded-lg transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10-6.5a1 1 0 0 0 0-1.72l-10-6.5A1 1 0 0 0 8 5.5z"/>
+          </svg>
+        </span>
+      </button>
+
+      <div class="text-sm">
+        @switch (llmStatus()) {
+          @case ('ok') {
+            <span class="text-color-success">Válida ✓</span>
+          }
+          @case ('bad') {
+            <span class="text-color-error">Inválida ✗</span>
+          }
+          @case ('checking') {
+            <span class="text-text-muted">Probando…</span>
+          }
+          @default {
+            <span class="text-text-muted">—</span>
+          }
+        }
+      </div>
+
+      @if (llmStatus() === 'ok' && llmModelUsed()) {
+        <div class="text-xs text-text-muted">
+          Modelo activo: <span class="font-medium">{{ llmModelUsed() }}</span>
+        </div>
+      }
+
+      @if (llmError()) {
+        <div class="text-xs text-color-error">{{ llmError() }}</div>
+      }
+    </div>
+  </div>
+
+  <!-- STT -->
+  <div>
+    <div class="text-lg font-semibold mb-4">STT</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- Motor -->
+      <div>
+        <div class="text-xs text-text-muted mb-2">Motor</div>
+        <div class="relative">
+          <select
+            class="w-full appearance-none rounded-lg bg-surface border border-border px-3 py-2 pr-10 text-sm
+                   outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)] transition"
+            [value]="selectedSttProviderId()"
+            (change)="onPickSttProvider($any($event.target).value)"
+          >
+            @for (p of sttProviders(); track p.name) {
+              <option [value]="p.name">{{ p.name }}</option>
+            }
+          </select>
+
+          <svg
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+            xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Endpoint -->
+      <div>
+        <div class="text-xs text-text-muted mb-2">Endpoint</div>
+        <div
+          class="w-full rounded-lg bg-surface border border-border px-3 py-2 text-sm flex items-center justify-between gap-3">
+          <span class="truncate opacity-90">{{ sttEndpointDisplay() }}</span>
+          <span class="text-xs text-text-muted underline opacity-80">Editar*</span>
+        </div>
+      </div>
+
+      <!-- Timeout -->
+      <div>
+        <div class="text-xs text-text-muted mb-2">Timeout</div>
+        <div class="flex items-center gap-2">
+          <input
+            type="number"
+            min="1000"
+            step="100"
+            class="w-24 h-9 text-center rounded-lg bg-surface border border-border px-2
+                   outline-none focus:outline-none focus:ring-0 focus:border-[var(--border-active)]
+                   [appearance:textfield]"
+            [value]="sttTimeoutMs()"
+            (input)="onSttTimeoutInput($any($event.target).value)"
+          />
+          <div class="text-xs text-text-muted flex items-center gap-1">
+            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-border">i</span>
+            <span>Si excede, se reconecta solo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Probar -->
+    <div class="mt-4 flex items-center gap-3">
+      <button
+        type="button"
+        class="h-9 px-3 rounded-lg bg-surface border border-border hover:bg-surface-hover transition
+               flex items-center gap-2 text-sm"
+        (click)="testSttWs()"
+        [disabled]="sttStatus() === 'checking'"
+      >
+        <span>Probar conexión</span>
+
+        <span
+          class="h-9 w-9 grid place-items-center rounded-lg transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10-6.5a1 1 0 0 0 0-1.72l-10-6.5A1 1 0 0 0 8 5.5z"/>
+          </svg>
+        </span>
+      </button>
+
+      <div class="text-sm">
+        @switch (sttStatus()) {
+          @case ('ok') {
+            <span class="text-color-success">Válida ✓</span>
+          }
+          @case ('bad') {
+            <span class="text-color-error">Inválida ✗</span>
+          }
+          @case ('checking') {
+            <span class="text-text-muted">Probando…</span>
+          }
+          @default {
+            <span class="text-text-muted">—</span>
+          }
+        }
+      </div>
+
+      @if (sttError()) {
+        <div class="text-xs text-color-error">{{ sttError() }}</div>
+      }
+    </div>
+  </div>
+
+</div>

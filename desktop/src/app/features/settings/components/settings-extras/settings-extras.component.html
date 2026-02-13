@@ -1,0 +1,44 @@
+<label class="mt-3 flex items-center gap-3 text-sm select-none cursor-pointer">
+  <input
+    type="checkbox"
+    class="h-5 w-5 rounded-md
+           appearance-none
+           border border-border
+           bg-surface
+           grid place-content-center
+           transition
+           focus:outline-none focus:ring-0
+           focus-visible:ring-2 focus-visible:ring-[var(--border-active)]
+           focus-visible:ring-offset-2 focus-visible:ring-offset-background
+           checked:bg-primary checked:border-[var(--border-active)]
+           relative"
+    [checked]="enabled()"
+    (change)="toggleDetect($any($event.target).checked)"
+  />
+
+  <span>Detectar preguntas automáticamente</span>
+</label>
+
+
+<div class="mt-3 flex items-center gap-3 text-sm"
+     [class.opacity-50]="!enabled()"
+     [class.pointer-events-none]="!enabled()">
+  <div class="text-text-muted">Silencio mínimo</div>
+
+  <input
+    type="number"
+    min="1"
+    max="10"
+    step="1"
+    [value]="minSilenceSeconds()"
+    (input)="setMinSilenceSeconds($any($event.target).value)"
+    class="w-10 h-9 text-center rounded-lg bg-surface border border-border px-2
+           outline-none focus:outline-none focus:ring-0
+           focus:border-[var(--border-active)]
+           [appearance:textfield]"
+    [disabled]="!enabled()"
+  />
+
+  <div class="text-text-muted">segundos</div>
+</div>
+

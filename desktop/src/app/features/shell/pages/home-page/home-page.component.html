@@ -1,0 +1,70 @@
+<!-- Padding SIEMPRE fijo (así BottomControls nunca pierde su margen derecho) -->
+<div class="h-full w-full p-4 bg-background text-text-main">
+  <div class="h-full w-full flex flex-col gap-4 min-h-0">
+
+    <!-- TOP -->
+    <div class="relative flex-1 min-h-0 overflow-visible">
+
+      <!-- CHAT -->
+      <section
+        class="h-full min-h-0 overflow-hidden ease-in-out"
+        [class.transition-none]="collapsed()"
+        [class.transition-[padding-right]]="!collapsed()"
+        [class.duration-150]="isClosing()"
+        [class.duration-600]="!isClosing() && !collapsed()"
+        [style.padding-right.px]="chatRightPad"
+      >
+        <app-chat-page class="h-full block"></app-chat-page>
+      </section>
+
+      <!-- DRAWER -->
+      <aside
+        class="absolute top-0 h-full overflow-hidden ease-in-out"
+        [style.right.px]="drawerRightOffset"
+        [class.transition-none]="collapsed()"
+        [class.transition-[width]]="!collapsed()"
+        [class.duration-150]="isClosing()"
+        [class.duration-600]="!isClosing() && !collapsed()"
+        [style.width.px]="visibleDrawerWidth"
+        (mouseenter)="onDrawerEnter()"
+        (mouseleave)="onDrawerLeave()"
+      >
+        <!-- Drawer real (anclado a la izquierda del viewport del aside) -->
+        <div class="absolute top-0 left-0 h-full" [style.width.px]="drawerW">
+          <app-settings-drawer
+            class="h-full block transition-opacity ease-in-out"
+            [class.duration-150]="isClosing()"
+            [class.duration-600]="!isClosing()"
+            [style.opacity]="collapsed() ? previewOpacity : 1"
+            [collapsed]="collapsed()"
+            [preview]="isPreview"
+            (toggleCollapsed)="toggle()"
+          ></app-settings-drawer>
+        </div>
+
+        <!-- FLECHA (solo colapsado y NO preview) -->
+        <button
+          class="absolute inset-0 grid place-items-center text-text-main transition-opacity duration-600 ease-in-out"
+          [class.opacity-0]="!collapsed() || isPreview"
+          [class.pointer-events-none]="!collapsed() || isPreview"
+          (click)="toggle()"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+      </aside>
+
+    </div>
+
+    <!-- BOTTOM (ya no se afecta nunca por el drawer) -->
+    <app-bottom-controls
+      class="shrink-0 w-full"
+      [isRunning]="sessionStore.status() !== 'idle'"
+      (togglePlay)="onTogglePlay()"
+      (stop)="onStop()"
+    ></app-bottom-controls>
+
+  </div>
+</div>

@@ -19,14 +19,15 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title=settings.APP_NAME)
 
-    if settings.CORS_ORIGINS:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=settings.CORS_ORIGINS,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
+    origins = settings.CORS_ORIGINS or ["http://localhost:4200", "null"]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     app.include_router(health.router)
     app.include_router(stt_ws.router)
