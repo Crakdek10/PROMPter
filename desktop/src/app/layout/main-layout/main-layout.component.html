@@ -1,7 +1,8 @@
 <div class="flex flex-col h-screen w-full bg-background text-text-main">
   <app-title-bar class="flex-none z-50"></app-title-bar>
 
-  <div class="flex-1 flex overflow-hidden">
+  <!-- ESTE wrapper asegura que el contenido de rutas pueda ocupar todo -->
+  <div class="flex-1 overflow-hidden">
     <router-outlet></router-outlet>
   </div>
 </div>

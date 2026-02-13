@@ -1,37 +1,106 @@
-<div class="h-8 bg-background flex items-center justify-between select-none px-2 border-b border-border relative">
+<!-- title-bar.html -->
+<div class="h-8 bg-background flex justify-between select-none border-b border-border relative pl-3">
 
-  <div class="flex items-center gap-2 pl-2 no-drag z-10">
-    <button (click)="goBack()" class="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors disabled:opacity-30" title="Atrás">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <div class="flex items-center gap-2 no-drag z-10">
+    <button (click)="goBack()"
+            class="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors disabled:opacity-30"
+            title="Atrás">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M15 18l-6-6 6-6"/>
       </svg>
     </button>
 
-    <button (click)="goForward()" class="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors disabled:opacity-30" title="Adelante">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button (click)="goForward()"
+            class="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors disabled:opacity-30"
+            title="Adelante">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 18l6-6-6-6"/>
       </svg>
     </button>
   </div>
 
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 opacity-90 pointer-events-none">
-    <img src="assets/logo.svg" alt="Logo" class="h-4 w-4 object-contain">
-
     <span class="text-xs font-semibold text-text-muted tracking-wide">PROMPTer</span>
   </div>
 
-  <div class="flex h-full text-text-muted no-drag z-10">
-    <button (click)="minimize()" class="h-full px-4 hover:bg-surface-hover hover:text-text-main flex items-center justify-center transition-colors">
-      <svg width="10" height="1" viewBox="0 0 10 1"><path d="M0 0h10v1H0z" fill="currentColor"/></svg>
-    </button>
+  <div class="flex h-full items-center no-drag z-10">
 
-    <button (click)="maximize()" class="h-full px-4 hover:bg-surface-hover hover:text-text-main flex items-center justify-center transition-colors">
-      <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1v8h8V1H1zm1 1h6v6H2V2z" fill="currentColor"/></svg>
-    </button>
+    <div class="flex items-center gap-1 pr-2 border-r border-border/50 h-4 mr-2">
 
-    <button (click)="close()" class="h-full px-4 hover:bg-error hover:text-white flex items-center justify-center transition-colors">
-      <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 0L0 1.5 3.5 5 0 8.5 1.5 10 5 6.5 8.5 10 10 8.5 6.5 5 10 1.5 8.5 0 5 3.5z" fill="currentColor"/></svg>
-    </button>
+      <button (click)="openNewWindow()"
+              class="p-1.5 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors group"
+              title="Abrir teleprompter">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        </svg>
+      </button>
+
+      <button (click)="openGithub()"
+              class="p-1.5 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors"
+              title="Ver repositorio">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
+          <path d="M9 18c-4.51 2-5-2-7-2"/>
+        </svg>
+      </button>
+
+      <!-- PERFIL + POPOVER -->
+      <div class="relative" #profileWrap>
+        <button
+          (click)="toggleProfileMenu($event)"
+          class="p-1.5 rounded-md hover:bg-surface-hover text-text-muted hover:text-text-main transition-colors"
+          title="Perfil"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </button>
+
+        <!-- POPOVER (solo Ajustes) -->
+        <div
+          class="absolute right-0 top-[calc(100%+8px)] z-50 w-56
+                 rounded-2xl border border-border bg-surface shadow-xl p-2"
+          [class.hidden]="!profileOpen()"
+        >
+          <button
+            type="button"
+            class="w-full flex items-center gap-2 px-3 py-2 rounded-xl
+                   hover:bg-surface-hover transition text-sm text-text-main"
+            (click)="goToSettings()"
+          >
+            <!-- ICONO AJUSTES (el que enviaste) -->
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <circle cx="12" cy="12" r="4"/>
+            </svg>
+
+            <span>Ajustes</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="flex h-full items-start">
+      <button (click)="minimize()" class="h-full w-12 hover:bg-surface-hover hover:text-text-main flex items-center justify-center transition-colors">
+        <svg width="10" height="1" viewBox="0 0 10 1"><path d="M0 0h10v1H0z" fill="currentColor"/></svg>
+      </button>
+
+      <button (click)="maximize()" class="h-full w-12 hover:bg-surface-hover hover:text-text-main flex items-center justify-center transition-colors">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1v8h8V1H1zm1 1h6v6H2V2z" fill="currentColor"/></svg>
+      </button>
+
+      <button (click)="close()" class="h-full w-12 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 0L0 1.5 3.5 5 0 8.5 1.5 10 5 6.5 8.5 10 10 8.5 6.5 5 10 1.5 8.5 0 5 3.5z" fill="currentColor"/></svg>
+      </button>
+    </div>
+
   </div>
-
 </div>

@@ -1,0 +1,77 @@
+<div class="relative h-full rounded-2xl bg-surface border border-border overflow-hidden">
+
+  <!-- Header -->
+  <div class="flex items-center px-3 py-3 border-b border-border group relative"
+       [class.hidden]="collapsed && !preview">
+
+    <button
+      class="absolute left-3 top-1/2 -translate-y-1/2
+             h-9 w-9 grid place-items-center rounded-lg
+             border border-border bg-surface
+             opacity-0 pointer-events-none
+             group-hover:opacity-100 group-hover:pointer-events-auto
+             transition-opacity duration-300
+             hover:bg-surface-hover"
+      (click)="toggleCollapsed.emit()"
+      title="Ocultar configuración"
+      [class.hidden]="preview"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2"/>
+        <path d="M9 3v18"/>
+        <path d="m14 9 3 3-3 3"/>
+      </svg>
+    </button>
+
+    <div class="font-semibold text-sm transition-all duration-300 pl-0 group-hover:pl-11">
+      Configuración
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="h-full overflow-y-auto p-3"
+       [class.hidden]="collapsed && !preview"
+       [class.pointer-events-none]="preview">
+
+    <div class="mb-2">
+      <app-settings-section
+        title="Sonido"
+        [open]="openSound()"
+        (toggle)="openSound.set(!openSound())"
+      >
+        <app-settings-sound />
+      </app-settings-section>
+    </div>
+
+    <div class="mb-2">
+      <app-settings-section
+        title="Transparencia"
+        [open]="openTransparency()"
+        (toggle)="openTransparency.set(!openTransparency())"
+      >
+        <app-settings-transparency />
+      </app-settings-section>
+    </div>
+
+    <app-settings-section
+      title="Ajustes extras"
+      [open]="openExtras()"
+      (toggle)="openExtras.set(!openExtras())"
+    >
+      <app-settings-extras />
+    </app-settings-section>
+  </div>
+
+  <!-- Collapsed arrow -->
+  <button
+    class="absolute inset-0 grid place-items-center text-text-muted hover:text-text-main transition"
+    [class.hidden]="!collapsed"
+    (click)="toggleCollapsed.emit()"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 18-6-6 6-6"/>
+    </svg>
+  </button>
+</div>

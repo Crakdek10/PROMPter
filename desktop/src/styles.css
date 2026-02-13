@@ -29,6 +29,8 @@
   /* 5. ESTADOS */
   --color-error: #ef4444;      /* Rojo para errores */
   --color-success: #22c55e;    /* Verde para "Válida" */
+
+  --app-opacity: 1;
 }
 
 html, body {
@@ -36,5 +38,17 @@ html, body {
   margin: 0;
   overflow: hidden;
   background-color: var(--bg-app); /* Asegura que el fondo base sea el correcto */
-  color: var(--text-main);         /* Asegura el color de texto base */
+  color: var(--text-main);
+  opacity: var(--app-opacity);/* Asegura el color de texto base */
+}
+
+
+/* Quita spinners del number input */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }
