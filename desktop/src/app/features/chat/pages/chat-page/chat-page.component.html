@@ -1,6 +1,6 @@
 <div class="h-full w-full flex flex-col relative overflow-hidden rounded-2xl bg-surface border border-border">
   <div class="flex-1 min-h-0 p-4">
-    @if (sessionStore.status() === 'idle') {
+    @if (chatStore.messages().length === 0) {
       <app-chat-placeholder class="h-full w-full"></app-chat-placeholder>
     } @else {
       <app-chat-feed class="h-full w-full"></app-chat-feed>

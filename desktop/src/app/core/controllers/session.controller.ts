@@ -4,8 +4,8 @@ import { SessionStore } from "../stores/session.store";
 import { ChatStore } from "../stores/chat.store";
 import { pcm16ToBase64 } from "../utils/audio-b64";
 import { filter, firstValueFrom } from "rxjs";
-import {AudioCaptureService} from '../services/audio/audio-capture.service';
-import {SttWsClient} from '../services/clients/stt.ws.client';
+import { AudioCaptureService } from "../services/audio/audio-capture.service";
+import { SttWsClient } from "../services/clients/stt.ws.client";
 
 @Injectable({ providedIn: "root" })
 export class SessionController {
@@ -17,6 +17,7 @@ export class SessionController {
 
   private sessionId: string | null = null;
   private streamingMsgId: string | null = null;
+  private audioRunning = false;
 
   constructor() {
     this.sttWs.messages$.subscribe(m => this.onSttMsg(m));
@@ -29,66 +30,88 @@ export class SessionController {
 
   async start() {
     const s = this.settings.settings();
-    this.session.startSession();
 
     this.sessionId = crypto.randomUUID?.() ?? String(Date.now());
+    this.audioRunning = false;
+    this.streamingMsgId = null;
 
-    // 1) connect WS (usa runtime.wsBaseUrl interno)
+    this.session.startSession();
+
+    // 1) connect WS
     this.sttWs.connect();
 
     // 2) esperar connected
     await firstValueFrom(this.sttWs.status$.pipe(filter(x => x === "connected")));
 
-    // 3) start
-    this.sttWs.start(this.sessionId, {
+    // 3) mandar start
+    const sttConfig: Record<string, unknown> = {
       provider: s.selectedSttProviderId,
       sample_rate: s.stt.sampleRate,
       format: s.stt.format,
-      // luego: model / base_url / etc
-    });
+      language: s.stt.language ?? "en", // si no tienes language, quita esta línea
+    };
 
-    // 4) audio streaming
-    await this.audio.start((pcm16, sr) => {
-      if (!this.sessionId) return;
-      this.sttWs.audio("pcm16", sr, pcm16ToBase64(pcm16));
-    }, s.stt.sampleRate);
+    // ✅ NO mandar whisper_bin/model desde frontend.
+    // Eso se resuelve con .env en la MV (backend).
+
+    this.sttWs.start(this.sessionId, sttConfig);
+
+    // IMPORTANTE: NO empezar audio aquí
+    // esperamos "ready" del servidor en onSttMsg()
   }
 
   stop() {
     if (this.session.status() !== "recording") return;
     this.session.setProcessing();
+
     try { this.audio.stop(); } catch {}
     try { this.sttWs.stop(); } catch {}
+    // el server cerrará el ws por protocolo, o queda abierto
+  }
+
+  private async startAudioIfNeeded(sampleRate: number) {
+    if (this.audioRunning) return;
+    this.audioRunning = true;
+
+    await this.audio.start((pcm16, sr) => {
+      if (!this.sessionId) return;
+      this.sttWs.audio("pcm16", sr, pcm16ToBase64(pcm16));
+    }, sampleRate);
   }
 
   private onSttMsg(m: any) {
-    if (m.type === "ready") return;
+    // ✅ READY: recién aquí arrancamos audio
+    if (m.type === "ready") {
+      const s = this.settings.settings();
+      this.startAudioIfNeeded(s.stt.sampleRate);
+      return;
+    }
 
     if (m.type === "partial") {
-      // crea o actualiza burbuja system streaming
       if (!this.streamingMsgId) {
-        this.streamingMsgId = this.chat.addSystemStreaming(m.text, this.sessionId);
+        this.streamingMsgId = this.chat.add("system", m.text); // por ahora simple
       } else {
-        this.chat.updateText(this.streamingMsgId, m.text);
+        this.chat.updateText(this.streamingMsgId, m.text, "streaming");
       }
       return;
     }
 
     if (m.type === "final") {
       if (!this.streamingMsgId) {
-        this.chat.addSystemFinal(m.text, this.sessionId);
+        this.chat.add("system", m.text);
       } else {
-        this.chat.finalizeSystem(this.streamingMsgId, m.text);
+        this.chat.updateText(this.streamingMsgId, m.text, "final");
         this.streamingMsgId = null;
       }
-      this.session.stopSession(); // vuelve a idle
+      this.audioRunning = false;
+      this.session.stopSession();
       return;
     }
 
     if (m.type === "error") {
-      this.chat.addSystemError(m.message ?? "STT error");
+      this.chat.add("system", `❌ ${m.message ?? "STT error"}`);
+      this.audioRunning = false;
       this.session.stopSession();
     }
   }
-
 }
